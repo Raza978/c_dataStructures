@@ -1,7 +1,7 @@
 CC = gcc
 
 # List of directories containing source files.
-SRC_DIRS := . cli bubbleSort
+SRC_DIRS := . cli SortingAlgorithms SearchingAlgorithms
 
 # Directory to store the build files (object files and dependency files).
 BUILD_DIR := build
