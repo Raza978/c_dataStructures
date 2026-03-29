@@ -1,26 +1,41 @@
-CC := gcc
+CC = gcc
 
-# Compiler flags: warnings, debug, look in current dir for headers, generate dependency files (.d), add phony targets for dependencies
-CFLAGS := -Wall -g -I. -MMD -MP
+# List of directories containing source files.
+SRC_DIRS := . cli bubbleSort
 
-SOURCES := $(wildcard *.c)
-OBJS := $(SOURCES:.c=.o)
-DEPS := $(OBJS:.o=.d)
+# Directory to store the build files (object files and dependency files).
+BUILD_DIR := build
 
+# Path to the final executable.
+EXE := $(BUILD_DIR)/dataStructuresDemo
+
+# Generate a list of all source files in the specified directories and create corresponding object file names.
+SRCS := $(foreach d,$(SRC_DIRS),$(wildcard $(d)/*.c))
+OBJS := $(SRCS:%.c=$(BUILD_DIR)/%.o)
+
+# -I includes the directories for header files. -I must be prefixed to each directory with header files.
+CFLAGS   := -Wall -g -MMD -MP $(addprefix -I,$(SRC_DIRS))
+LDFLAGS  := -Llib
+LDLIBS   := -lm
+
+# These targets don't correspond to actual files/folders, so we mark them as phony to avoid conflicts with files/folders of the same name
 .PHONY: all clean
 
-all: output
-	./output
+all: $(EXE)
 
-output: $(OBJS)
-	$(CC) $(CFLAGS) $(OBJS) -o output
+# Build the executable by linking the object files.
+$(EXE): $(OBJS) | $(BUILD_DIR)
+	$(CC) $(LDFLAGS) $^ $(LDLIBS) -o $@
 
-# generic compile rule (produces .o and .d via -MMD -MP)
-%.o: %.c
+# Compile source files into object files.
+$(BUILD_DIR)/%.o: %.c | $(BUILD_DIR)
+	mkdir -p $(dir $@)
 	$(CC) $(CFLAGS) -c $< -o $@
 
-# include generated dependency files when present
--include $(DEPS)
+# Create the build directory if it doesn't exist.
+$(BUILD_DIR):
+	mkdir -p $@
 
 clean:
-	rm -f *.o *.d output
+	@$(RM) -rv $(BUILD_DIR)
+

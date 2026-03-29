@@ -1,5 +1,2 @@
-*.o
-*.d
 .vscode
-*.exe
-output
+build
