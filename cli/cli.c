@@ -6,261 +6,269 @@
 #include "searchingAlgorithms.h"
 #include "linkedList.h"
 
-static void CLI_ShowMenu(void);
+typedef enum {
+    BASE_MENU = 0,
+    SORTING_MENU,
+    SEARCHING_MENU,
+    LINKED_LIST_MENU
+} MenuState;
+
+typedef enum {
+    // Base Menu Options
+    EXIT = 0,
+    SORTING,
+    SEARCHING,
+    LINKED_LIST,
+
+    // Sorting Menu Options
+    BUBBLE_SORT = 1,
+    SELECTION_SORT,
+    INSERTION_SORT,
+    QUICK_SORT,
+
+    // Searching Menu Options
+    LINEAR_SEARCH = 1,
+    BINARY_SEARCH,
+
+    // Linked List Menu Options
+    INSERT_AT_HEAD = 1,
+    INSERT_AT_TAIL,
+    INSERT_AT_POSITION,
+    DELETE_HEAD,
+    DELETE_TAIL,
+    DELETE_AT_POSITION,
+    DELETE_LIST
+} MenuOption;
+
+typedef void (*MenuAction)(void);
+
+typedef struct {
+    MenuState currentState;
+    MenuOption menuOption;
+    MenuState nextState;
+    const char *label;
+    MenuAction action;
+} MenuTransition;
+
+static int running = 1;
+
+// Function prototypes
 static int CLI_GetUserInput(void);
-static void CLI_ExecuteMenuOption(int choice);
-static void CLI_ShowSortingMenu(void);
-static void CLI_RunSortingMenu(void);
-static void CLI_ShowSearchingMenu(void);
-static void CLI_RunSearchingMenu(void);
-static void CLI_ShowLinkedListMenu(void);
-static void CLI_RunLinkedListMenu(void);
+static int CLI_GetUserInputPrompt(const char *prompt);
+static const MenuTransition *CLI_FindTransition(MenuState state, MenuOption option);
+static void CLI_ShowMenu(MenuState state);
+static void CLI_ExecuteTransition(const MenuTransition *transition);
+static const char *CLI_GetMenuTitle(MenuState state);
 
-static void CLI_ShowSortingMenu(void)
+// Action functions for menu options
+static void CLI_ActionBubbleSort(void) { BubbleSort(); }
+static void CLI_ActionSelectionSort(void) { SelectionSort(); }
+static void CLI_ActionInsertionSort(void) { InsertionSort(); }
+static void CLI_ActionQuickSort(void) { QuickSort(); }
+static void CLI_ActionLinearSearch(void) { LinearSearch(); }
+static void CLI_ActionBinarySearch(void) { BinarySearch(); }
+static void CLI_ActionInsertAtHead(void) 
 {
-    int i = 1;
-    printf("\n=== Sorting Algorithms ===\n");
-    printf("%d. Bubble Sort\n", i++);
-    printf("%d. Selection Sort\n", i++);
-    printf("%d. Insertion Sort\n", i++);
-    printf("%d. Quick Sort\n", i++);
-    printf("0. Back\n");
-    printf("Enter menu number: ");
+    int data = CLI_GetUserInputPrompt("Enter data (int) for new node: ");
+    LinkedList_InsertAtHead(data);
 }
+static void CLI_ActionInsertAtTail(void) 
+{
+    int data = CLI_GetUserInputPrompt("Enter data (int) for new node: ");
+    LinkedList_InsertAtTail(data);
+}
+static void CLI_ActionInsertAtPosition(void) 
+{
+    int data = CLI_GetUserInputPrompt("Enter data (int) for new node: ");
+    int position = CLI_GetUserInputPrompt("Enter position (int) for new node: ");
+    LinkedList_InsertAfterPosition(data, position);
+}
+static void CLI_ActionDeleteHead(void) { LinkedList_DeleteHead(); }
+static void CLI_ActionDeleteTail(void) { LinkedList_DeleteTail(); }
+static void CLI_ActionDeleteAtPosition(void) 
+{
+    int position = CLI_GetUserInputPrompt("Enter position (int) for node to delete: ");
+    LinkedList_DeleteAtPosition(position);
+}
+static void CLI_ActionDeleteList(void) { LinkedList_DeleteList(); }
 
-static void CLI_ShowSearchingMenu(void)
-{
-    int i = 1;
-    printf("\n=== Searching Algorithms ===\n");
-    printf("%d. Linear Search\n", i++);
-    printf("%d. Binary Search\n", i++);
-    printf("0. Back\n");
-    printf("Enter menu number: ");
-}
+static const MenuTransition stateTransitionTable[] = {
+    //currentState,     menuOption,         nextState,        label,                action
+    { BASE_MENU,        EXIT,               BASE_MENU,        "Exit",               NULL },
+    { BASE_MENU,        SORTING,            SORTING_MENU,     "Sorting Algorithms", NULL },
+    { BASE_MENU,        SEARCHING,          SEARCHING_MENU,   "Searching Algorithms", NULL },
+    { BASE_MENU,        LINKED_LIST,        LINKED_LIST_MENU, "Linked Lists",       NULL },
 
-static void CLI_ShowLinkedListMenu(void)
-{
-    int i = 1;
-    printf("\n=== Linked List Algorithms ===\n");
-    printf("%d. Insert at Head\n", i++);
-    printf("%d. Insert at Tail\n", i++);
-    printf("%d. Insert at Position\n", i++);
-    printf("%d. Delete Head\n", i++);
-    printf("%d. Delete Tail\n", i++);
-    printf("%d. Delete at Position\n", i++);
-    printf("%d. Delete List\n", i++);
-    printf("0. Back\n");
-    printf("Enter menu number: ");
-}
+    { SORTING_MENU,     BUBBLE_SORT,        SORTING_MENU,     "Bubble Sort",        CLI_ActionBubbleSort },
+    { SORTING_MENU,     SELECTION_SORT,     SORTING_MENU,     "Selection Sort",     CLI_ActionSelectionSort },
+    { SORTING_MENU,     INSERTION_SORT,     SORTING_MENU,     "Insertion Sort",     CLI_ActionInsertionSort },
+    { SORTING_MENU,     QUICK_SORT,         SORTING_MENU,     "Quick Sort",         CLI_ActionQuickSort },
+    { SORTING_MENU,     EXIT,               BASE_MENU,        "Back",               NULL },
+
+    { SEARCHING_MENU,   LINEAR_SEARCH,      SEARCHING_MENU,   "Linear Search",      CLI_ActionLinearSearch },
+    { SEARCHING_MENU,   BINARY_SEARCH,      SEARCHING_MENU,   "Binary Search",      CLI_ActionBinarySearch },
+    { SEARCHING_MENU,   EXIT,               BASE_MENU,        "Back",               NULL },
+
+    { LINKED_LIST_MENU, INSERT_AT_HEAD,      LINKED_LIST_MENU, "Insert at Head",     CLI_ActionInsertAtHead },
+    { LINKED_LIST_MENU, INSERT_AT_TAIL,      LINKED_LIST_MENU, "Insert at Tail",     CLI_ActionInsertAtTail },
+    { LINKED_LIST_MENU, INSERT_AT_POSITION,  LINKED_LIST_MENU, "Insert at Position", CLI_ActionInsertAtPosition },
+    { LINKED_LIST_MENU, DELETE_HEAD,         LINKED_LIST_MENU, "Delete Head",        CLI_ActionDeleteHead },
+    { LINKED_LIST_MENU, DELETE_TAIL,         LINKED_LIST_MENU, "Delete Tail",        CLI_ActionDeleteTail },
+    { LINKED_LIST_MENU, DELETE_AT_POSITION,  LINKED_LIST_MENU, "Delete at Position", CLI_ActionDeleteAtPosition },
+    { LINKED_LIST_MENU, DELETE_LIST,         LINKED_LIST_MENU, "Delete List",        CLI_ActionDeleteList },
+    { LINKED_LIST_MENU, EXIT,                BASE_MENU,        "Back",               NULL }
+};
 
 /**
- * @brief Displays the command line interface menu
+ * @brief Gets the title for the given menu state.
  * 
+ * @param state The menu state
+ * @return const char* The title of the menu
  */
-static void CLI_ShowMenu(void)
+static const char *CLI_GetMenuTitle(MenuState state)
 {
-    int i = 1;
-    printf("\n=== CLI Menu ===\n");
-    printf("%d. Sorting Algorithms\n", i++);
-    printf("%d. Searching Algorithms\n", i++);
-    printf("%d. Linked Lists\n", i++);
-    printf("0. Exit\n");
+    switch (state) 
+    {
+        case BASE_MENU:
+            return "CLI Menu";
+        case SORTING_MENU:
+            return "Sorting Algorithms";
+        case SEARCHING_MENU:
+            return "Searching Algorithms";
+        case LINKED_LIST_MENU:
+            return "Linked List Algorithms";
+        default:
+            return "Menu";
+    }
+}
+
+/**
+ * @brief Displays the menu options for the given menu state.
+ * 
+ * @param state The current menu state
+ */
+static void CLI_ShowMenu(MenuState state)
+{
+    printf("\n=== %s ===\n", CLI_GetMenuTitle(state));
+
+    for (size_t i = 0; i < sizeof(stateTransitionTable) / sizeof(stateTransitionTable[0]); ++i) 
+    {
+        if (stateTransitionTable[i].currentState == state) 
+        {
+            printf("%d. %s\n", stateTransitionTable[i].menuOption, stateTransitionTable[i].label);
+        }
+    }
+
     printf("Enter menu number: ");
 }
 
 /**
- * @brief Gets the menu input from the user
+ * @brief Gets user input from the console.
  * 
- * @return int The menu option chosen by the user, or -1 if input is invalid
+ * @return int The user's input.
  */
 static int CLI_GetUserInput(void)
 {
     char buffer[32];
-    if (fgets(buffer, sizeof(buffer), stdin) == NULL) {
+    if (fgets(buffer, sizeof(buffer), stdin) == NULL) 
+    {
         return -1;
     }
 
     char *endptr = NULL;
     long choice = strtol(buffer, &endptr, 10);
 
-    if (endptr == buffer || *endptr != '\n') {
+    if (endptr == buffer || *endptr != '\n') 
+    {
         return -1;
     }
 
     return (int)choice;
 }
 
-static void CLI_RunSortingMenu(void)
+/**
+ * @brief Gets user input with a prompt.
+ * 
+ * @param prompt The prompt to display.
+ * @return int The user's input.
+ */
+static int CLI_GetUserInputPrompt(const char *prompt)
 {
-    int menuOption;
+    int value;
 
-    do {
-        CLI_ShowSortingMenu();
-        menuOption = CLI_GetUserInput();
-
-        printf("\n"); // Add a newline for better formatting
-
-        switch (menuOption) {
-            case 1:
-                BubbleSort();
-                break;
-
-            case 2:
-                SelectionSort();
-                break;
-
-            case 3:
-                InsertionSort();
-                break;
-            
-            case 4:
-                QuickSort();
-                break;
-
-            case 0:
-                printf("\nReturning to main menu.\n");
-                break;
-
-            default:
-                printf("\nInvalid selection. Please enter a menu number.\n");
-                break;
-        }
-    } while (menuOption != 0);
-}
-
-static void CLI_RunSearchingMenu(void)
-{
-    int menuOption;
-
-    do {
-        CLI_ShowSearchingMenu();
-        menuOption = CLI_GetUserInput();
-
-        printf("\n"); // Add a newline for better formatting
-
-        switch (menuOption) 
+    while (1) 
+    {
+        printf("%s", prompt);
+        value = CLI_GetUserInput();
+        if (value != -1) 
         {
-            case 1:
-                LinearSearch();
-                break;
-
-            case 2:
-                BinarySearch();
-                break;
-
-            case 0:
-                printf("\nReturning to main menu.\n");
-                break;
-
-            default:
-                printf("\nInvalid selection. Please enter a menu number.\n");
-                break;
+            return value;
         }
-    } while (menuOption != 0);
-}
-
-static void CLI_RunLinkedListMenu(void)
-{
-    int menuOption;
-
-    do {
-        CLI_ShowLinkedListMenu();
-        menuOption = CLI_GetUserInput();
-        int data = 0;
-        int position = 0;
-
-        printf("\n"); // Add a newline for better formatting
-
-        switch (menuOption) 
-        {
-            case 1:
-                printf("Enter data (int) for new node: ");
-                data = CLI_GetUserInput();
-                LinkedList_InsertAtHead(data);
-                break;
-            
-            case 2:
-                printf("Enter data (int) for new node: ");
-                data = CLI_GetUserInput();
-                LinkedList_InsertAtTail(data);
-                break;
-
-            case 3:
-                printf("Enter data (int) for new node: ");
-                data = CLI_GetUserInput();
-                printf("Enter position (int) for new node: ");
-                position = CLI_GetUserInput();
-                LinkedList_InsertAfterPosition(data, position);
-                break;
-
-            case 4:
-                LinkedList_DeleteHead();
-                break;
-            
-            case 5:
-                LinkedList_DeleteTail();
-                break;
-
-            case 6:
-                printf("Enter position (int) for node to delete: ");
-                position = CLI_GetUserInput();
-                LinkedList_DeleteAtPosition(position);
-                break;
-            
-            case 7:
-                LinkedList_DeleteList();
-                break;
-
-            case 0:
-                printf("\nReturning to main menu.\n");
-                break;
-
-            default:
-                printf("\nInvalid selection. Please enter a menu number.\n");
-                break;
-        }
-    } while (menuOption != 0);
+        printf("Invalid input. Please enter a valid integer.\n");
+    }
 }
 
 /**
- * @brief Executes the selected menu option
+ * @brief Finds the menu transition for a given state and option.
  * 
- * @param menuOption The menu option chosen by the user
+ * @param state Current menu state
+ * @param option Selected menu option
+ * @return const MenuTransition* Pointer to the found menu transition, or NULL if not found
  */
-static void CLI_ExecuteMenuOption(int menuOption)
+static const MenuTransition *CLI_FindTransition(MenuState state, MenuOption option)
 {
-    switch (menuOption) 
+    for (size_t i = 0; i < sizeof(stateTransitionTable) / sizeof(stateTransitionTable[0]); ++i) 
     {
-        case 1:
-            CLI_RunSortingMenu();
-            break;
+        if (stateTransitionTable[i].currentState == state && stateTransitionTable[i].menuOption == option) 
+        {
+            return &stateTransitionTable[i];
+        }
+    }
+    return NULL;
+}
 
-        case 2:
-            CLI_RunSearchingMenu();
-            break;
+/**
+ * @brief Executes the action associated with the given menu transition and handles state changes.
+ * 
+ * @param transition Pointer to the MenuTransition to execute
+ */
+static void CLI_ExecuteTransition(const MenuTransition *transition)
+{
+    if (transition->action != NULL) 
+    {
+        transition->action();
+    }
 
-        case 3:
-            CLI_RunLinkedListMenu();
-            break;
-
-        case 0:
-            printf("Exiting CLI. Goodbye!\n");
-            break;
-
-        default:
-            printf("Invalid selection. Please enter a menu number.\n");
-            break;
+    if (transition->currentState == BASE_MENU && transition->menuOption == EXIT) 
+    {
+        printf("Exiting CLI. Goodbye!\n");
+        running = 0;
     }
 }
 
 void CLI_Run(void)
 {
-    int menuOption = 0;
+    MenuState currentState = BASE_MENU;
 
-    do {
-        CLI_ShowMenu();
-        menuOption = CLI_GetUserInput();
+    while (running) {
+        CLI_ShowMenu(currentState);
+        int menuOption = CLI_GetUserInput();
+        printf("\n");
 
-        CLI_ExecuteMenuOption(menuOption);
-    } while (menuOption != 0);
+        if (menuOption == -1) 
+        {
+            printf("Invalid input. Please enter a number.\n");
+            continue;
+        }
+
+        const MenuTransition *transition = CLI_FindTransition(currentState, (MenuOption)menuOption);
+        if (transition == NULL) 
+        {
+            printf("Invalid selection. Please enter a menu number.\n");
+            continue;
+        }
+
+        CLI_ExecuteTransition(transition);
+        currentState = transition->nextState;
+    }
 }
