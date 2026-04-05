@@ -4,6 +4,7 @@
 #include "cli.h"
 #include "sortingAlgorithms.h"
 #include "searchingAlgorithms.h"
+#include "linkedList.h"
 
 static void CLI_ShowMenu(void);
 static int CLI_GetUserInput(void);
@@ -12,6 +13,8 @@ static void CLI_ShowSortingMenu(void);
 static void CLI_RunSortingMenu(void);
 static void CLI_ShowSearchingMenu(void);
 static void CLI_RunSearchingMenu(void);
+static void CLI_ShowLinkedListMenu(void);
+static void CLI_RunLinkedListMenu(void);
 
 static void CLI_ShowSortingMenu(void)
 {
@@ -35,6 +38,21 @@ static void CLI_ShowSearchingMenu(void)
     printf("Enter menu number: ");
 }
 
+static void CLI_ShowLinkedListMenu(void)
+{
+    int i = 1;
+    printf("\n=== Linked List Algorithms ===\n");
+    printf("%d. Insert at Head\n", i++);
+    printf("%d. Insert at Tail\n", i++);
+    printf("%d. Insert at Position\n", i++);
+    printf("%d. Delete Head\n", i++);
+    printf("%d. Delete Tail\n", i++);
+    printf("%d. Delete at Position\n", i++);
+    printf("%d. Delete List\n", i++);
+    printf("0. Back\n");
+    printf("Enter menu number: ");
+}
+
 /**
  * @brief Displays the command line interface menu
  * 
@@ -45,6 +63,7 @@ static void CLI_ShowMenu(void)
     printf("\n=== CLI Menu ===\n");
     printf("%d. Sorting Algorithms\n", i++);
     printf("%d. Searching Algorithms\n", i++);
+    printf("%d. Linked Lists\n", i++);
     printf("0. Exit\n");
     printf("Enter menu number: ");
 }
@@ -119,13 +138,77 @@ static void CLI_RunSearchingMenu(void)
 
         printf("\n"); // Add a newline for better formatting
 
-        switch (menuOption) {
+        switch (menuOption) 
+        {
             case 1:
                 LinearSearch();
                 break;
 
             case 2:
                 BinarySearch();
+                break;
+
+            case 0:
+                printf("\nReturning to main menu.\n");
+                break;
+
+            default:
+                printf("\nInvalid selection. Please enter a menu number.\n");
+                break;
+        }
+    } while (menuOption != 0);
+}
+
+static void CLI_RunLinkedListMenu(void)
+{
+    int menuOption;
+
+    do {
+        CLI_ShowLinkedListMenu();
+        menuOption = CLI_GetUserInput();
+        int data = 0;
+        int position = 0;
+
+        printf("\n"); // Add a newline for better formatting
+
+        switch (menuOption) 
+        {
+            case 1:
+                printf("Enter data (int) for new node: ");
+                data = CLI_GetUserInput();
+                LinkedList_InsertAtHead(data);
+                break;
+            
+            case 2:
+                printf("Enter data (int) for new node: ");
+                data = CLI_GetUserInput();
+                LinkedList_InsertAtTail(data);
+                break;
+
+            case 3:
+                printf("Enter data (int) for new node: ");
+                data = CLI_GetUserInput();
+                printf("Enter position (int) for new node: ");
+                position = CLI_GetUserInput();
+                LinkedList_InsertAfterPosition(data, position);
+                break;
+
+            case 4:
+                LinkedList_DeleteHead();
+                break;
+            
+            case 5:
+                LinkedList_DeleteTail();
+                break;
+
+            case 6:
+                printf("Enter position (int) for node to delete: ");
+                position = CLI_GetUserInput();
+                LinkedList_DeleteAtPosition(position);
+                break;
+            
+            case 7:
+                LinkedList_DeleteList();
                 break;
 
             case 0:
@@ -154,6 +237,10 @@ static void CLI_ExecuteMenuOption(int menuOption)
 
         case 2:
             CLI_RunSearchingMenu();
+            break;
+
+        case 3:
+            CLI_RunLinkedListMenu();
             break;
 
         case 0:

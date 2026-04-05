@@ -3,6 +3,7 @@
 #include "cli.h"
 #include "sortingAlgorithms.h"
 #include "searchingAlgorithms.h"
+#include "linkedList.h"
 
 int main(void)
 {
