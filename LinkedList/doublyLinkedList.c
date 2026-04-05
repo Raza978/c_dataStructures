@@ -1,4 +1,4 @@
-#include "linkedList.h"
+#include "doublyLinkedList.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include "log.h"
@@ -7,23 +7,25 @@ typedef struct Node_t   // Using Node_t here prevents a warning when using node 
 {
     int data;
     struct Node_t *next;
+    struct Node_t *prev;
 } Node_t;
 
 static Node_t *myNode = NULL;
 
-static void PrintLinkedList(Node_t *node);
+static void PrintDoublyLinkedList(Node_t *node);
 static Node_t *CreateNode(int data);
 static Node_t *FindNode(int position);
 
 /**
- * @brief Prints the entire linked list
+ * @brief Prints the entire doubly linked list
  * 
- * @param node The head node of the linked list
+ * @param node The head node of the doubly linked list
  */
-static void PrintLinkedList(Node_t *node)
+static void PrintDoublyLinkedList(Node_t *node)
 {
+    printf("NULL <-> ");
     while (node != NULL) {
-        printf("%d -> ", node->data);
+        printf("%d <-> ", node->data);
         node = node->next;
     }
     printf("NULL\n");
@@ -69,13 +71,15 @@ static Node_t *CreateNode(int data)
         return NULL;
     }
 
-    newNode->data = data; // Initialize data
-    newNode->next = NULL; // Initialize next pointer to NULL
+    // Initialize the new node's data and pointers
+    newNode->data = data;
+    newNode->next = NULL;
+    newNode->prev = NULL;
 
     return newNode;
 }
 
-void LinkedList_InsertAtHead(int data)
+void DoublyLinkedList_InsertAtHead(int data)
 {
     Node_t *newNode = CreateNode(data);
     if (newNode == NULL)
@@ -83,13 +87,21 @@ void LinkedList_InsertAtHead(int data)
         return;
     }
 
+    if (myNode == NULL)
+    {
+        myNode = newNode;
+        PrintDoublyLinkedList(myNode);
+        return;
+    }
+
+    myNode->prev = newNode; // Point the current head's prev pointer to the new node
     newNode->next = myNode; // Point to the rest of the existing list. If myNode is NULL, this correctly sets the next pointer to NULL.
     myNode = newNode;
 
-    PrintLinkedList(myNode);
+    PrintDoublyLinkedList(myNode);
 }
 
-void LinkedList_InsertAtTail(int data)
+void DoublyLinkedList_InsertAtTail(int data)
 {
     Node_t *newNode = CreateNode(data);
     if (newNode == NULL)
@@ -100,7 +112,7 @@ void LinkedList_InsertAtTail(int data)
     if (myNode == NULL) 
     {
         myNode = newNode; // If the list is empty, set the new node as the head
-        PrintLinkedList(myNode);
+        PrintDoublyLinkedList(myNode);
         return;
     }
 
@@ -111,11 +123,12 @@ void LinkedList_InsertAtTail(int data)
         current = current->next;
     }
     current->next = newNode;
+    newNode->prev = current;
 
-    PrintLinkedList(myNode);
+    PrintDoublyLinkedList(myNode);
 }
 
-void LinkedList_InsertAtPosition(int data, int position)
+void DoublyLinkedList_InsertAtPosition(int data, int position)
 {
     Node_t *existingNode = FindNode(position-1);
     if (existingNode == NULL)
@@ -130,32 +143,17 @@ void LinkedList_InsertAtPosition(int data, int position)
     }
 
     newNode->next = existingNode->next;
+    newNode->prev = existingNode;
     existingNode->next = newNode;
 
-    PrintLinkedList(myNode);
+    PrintDoublyLinkedList(myNode);
 }
 
-void LinkedList_DeleteHead(void)
+void DoublyLinkedList_DeleteHead(void)
 {
     if (myNode == NULL) 
     {
-        LOG_ERROR_N("Linked List is already empty.");
-        return;
-    }
-
-    Node_t *temp = myNode;
-    myNode = myNode->next; //change where the head of myNode is pointing to.
-    free(temp);
-    temp = NULL;
-
-    PrintLinkedList(myNode);
-}
-
-void LinkedList_DeleteTail(void)
-{
-    if (myNode == NULL) 
-    {
-        LOG_ERROR_N("Linked List is already empty.");
+        LOG_ERROR_N("Doubly Linked List is already empty.");
         return;
     }
 
@@ -163,7 +161,32 @@ void LinkedList_DeleteTail(void)
     {
         free(myNode);
         myNode = NULL;
-        PrintLinkedList(myNode);
+        PrintDoublyLinkedList(myNode);
+        return;
+    }
+
+    Node_t *temp = myNode;
+    myNode = myNode->next; //change where the head of myNode is pointing to.
+    myNode->prev = NULL; // Set the new head's prev pointer to NULL since it's now the head of the list.
+    free(temp);
+    temp = NULL;
+
+    PrintDoublyLinkedList(myNode);
+}
+
+void DoublyLinkedList_DeleteTail(void)
+{
+    if (myNode == NULL) 
+    {
+        LOG_ERROR_N("Doubly Linked List is already empty.");
+        return;
+    }
+
+    if (myNode->next == NULL) 
+    {
+        free(myNode);
+        myNode = NULL;
+        PrintDoublyLinkedList(myNode);
         return;
     }
 
@@ -175,20 +198,20 @@ void LinkedList_DeleteTail(void)
     free(temp->next);   // Next node is the last node which needs to be deleted
     temp->next = NULL;
 
-    PrintLinkedList(myNode);
+    PrintDoublyLinkedList(myNode);
 }
 
-void LinkedList_DeleteAtPosition(int position)
+void DoublyLinkedList_DeleteAtPosition(int position)
 {
     if (myNode == NULL) 
     {
-        LOG_ERROR_N("Linked List is already empty.");
+        LOG_ERROR_N("Doubly Linked List is already empty.");
         return;
     }
 
     if (position == 0) 
     {
-        LinkedList_DeleteHead();
+        DoublyLinkedList_DeleteHead();
         return;
     }
 
@@ -201,13 +224,14 @@ void LinkedList_DeleteAtPosition(int position)
 
     Node_t *temp = previousNode->next;
     previousNode->next = temp->next;
+    temp->prev = previousNode;
     free(temp);
     temp = NULL;
 
-    PrintLinkedList(myNode);
+    PrintDoublyLinkedList(myNode);
 }
 
-void LinkedList_DeleteList(void)
+void DoublyLinkedList_DeleteList(void)
 {
     int count = 0;
     while (myNode != NULL) 

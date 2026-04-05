@@ -16,12 +16,12 @@ void LinkedList_InsertAtHead(int data);
 void LinkedList_InsertAtTail(int data);
 
 /**
- * @brief Inserts a new node after the specified position in the linked list.
+ * @brief Inserts a new node at the specified position in the linked list.
  * 
  * @param data The integer data to be stored in the new node.
- * @param position The zero-based index after which the new node should be inserted.
+ * @param position The zero-based index at which the new node should be inserted.
  */
-void LinkedList_InsertAfterPosition(int data, int position);
+void LinkedList_InsertAtPosition(int data, int position);
 
 /**
  * @brief Deletes the first node in the linked list.
