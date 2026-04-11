@@ -26,6 +26,7 @@ all: $(EXE)
 # Build the executable by linking the object files.
 $(EXE): $(OBJS) | $(BUILD_DIR)
 	$(CC) $(LDFLAGS) $^ $(LDLIBS) -o $@
+	@printf "\nExecutable located at %s\n" "$@"
 
 # Compile source files into object files.
 $(BUILD_DIR)/%.o: %.c | $(BUILD_DIR)
