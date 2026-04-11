@@ -1,7 +1,7 @@
 CC = gcc
 
 # List of directories containing source files.
-SRC_DIRS := . cli SortingAlgorithms SearchingAlgorithms LinkedList
+SRC_DIRS := . cli SortingAlgorithms SearchingAlgorithms LinkedList Stack
 
 # Directory to store the build files (object files and dependency files).
 BUILD_DIR := build

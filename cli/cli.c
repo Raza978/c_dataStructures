@@ -6,6 +6,7 @@
 #include "searchingAlgorithms.h"
 #include "linkedList.h"
 #include "doublyLinkedList.h"
+#include "stack.h"
 
 typedef enum {
     BASE_MENU = 0,
@@ -13,6 +14,7 @@ typedef enum {
     SEARCHING_MENU,
     LINKED_LIST_MENU,
     DOUBLY_LINKED_LIST_MENU,
+    STACK_MENU,
 } MenuState;
 
 typedef enum {
@@ -22,6 +24,7 @@ typedef enum {
     SEARCHING,
     LINKED_LIST,
     DOUBLY_LINKED_LIST,
+    STACK,
 
     // Sorting Menu Options
     BUBBLE_SORT = 1,
@@ -50,6 +53,12 @@ typedef enum {
     DBL_DELETE_TAIL,
     DBL_DELETE_AT_POSITION,
     DBL_DELETE_LIST,
+
+    // Stack Menu Options
+    STACK_PUSH = 1,
+    STACK_POP,
+    STACK_PEEK,
+    STACK_IS_EMPTY,
 } MenuOption;
 
 typedef void (*MenuAction)(void);
@@ -127,6 +136,14 @@ static void ActionDBLDeleteAtPosition(void)
     DoublyLinkedList_DeleteAtPosition(position);
 }
 static void ActionDBLDeleteList(void) { DoublyLinkedList_DeleteList(); }
+static void ActionStackPush(void) 
+{ 
+    int data = GetUserInputPrompt("Enter data (int) to push onto the stack: ");
+    Stack_Push(data); 
+}
+static void ActionStackPop(void) { Stack_Pop(); }
+static void ActionStackPeek(void) { Stack_Peek(); }
+static void ActionStackIsEmpty(void) { Stack_IsEmpty(); }
 
 static const MenuTransition stateTransitionTable[] = {
     //currentState,     menuOption,         nextState,        label,                action
@@ -136,6 +153,7 @@ static const MenuTransition stateTransitionTable[] = {
     { BASE_MENU,        SEARCHING,          SEARCHING_MENU,   "Searching Algorithms", NULL },
     { BASE_MENU,        LINKED_LIST,        LINKED_LIST_MENU, "Linked Lists",       NULL },
     { BASE_MENU,        DOUBLY_LINKED_LIST, DOUBLY_LINKED_LIST_MENU, "Doubly Linked Lists", NULL },
+    { BASE_MENU,        STACK,              STACK_MENU,       "Stack",              NULL },
 
     // Sorting Menu Transitions
     { SORTING_MENU,     BUBBLE_SORT,        SORTING_MENU,     "Bubble Sort",        ActionBubbleSort },
@@ -169,6 +187,13 @@ static const MenuTransition stateTransitionTable[] = {
     { DOUBLY_LINKED_LIST_MENU, DBL_DELETE_AT_POSITION,  DOUBLY_LINKED_LIST_MENU, "Delete at Position", ActionDBLDeleteAtPosition },
     { DOUBLY_LINKED_LIST_MENU, DBL_DELETE_LIST,         DOUBLY_LINKED_LIST_MENU, "Delete List",        ActionDBLDeleteList },
     { DOUBLY_LINKED_LIST_MENU, EXIT,                    BASE_MENU,               "Back",               NULL },
+
+    // Stack Menu Transitions
+    { STACK_MENU,        STACK_PUSH,         STACK_MENU,        "Push",               ActionStackPush },
+    { STACK_MENU,        STACK_POP,          STACK_MENU,        "Pop",                ActionStackPop },
+    { STACK_MENU,        STACK_PEEK,         STACK_MENU,        "Peek",               ActionStackPeek },
+    { STACK_MENU,        STACK_IS_EMPTY,     STACK_MENU,        "Is Empty?",          ActionStackIsEmpty },
+    { STACK_MENU,        EXIT,               BASE_MENU,         "Back",               NULL },
 };
 
 /**
@@ -191,6 +216,8 @@ static const char *GetMenuTitle(MenuState state)
             return "Linked List";
         case DOUBLY_LINKED_LIST_MENU:
             return "Doubly Linked List";
+        case STACK_MENU:
+            return "Stack";
         default:
             return "Menu";
     }
