@@ -7,6 +7,7 @@
 #include "linkedList.h"
 #include "doublyLinkedList.h"
 #include "stack.h"
+#include "circularBuffer.h"
 
 typedef enum {
     BASE_MENU = 0,
@@ -15,6 +16,7 @@ typedef enum {
     LINKED_LIST_MENU,
     DOUBLY_LINKED_LIST_MENU,
     STACK_MENU,
+    CIRCULAR_BUFFER_MENU,
 } MenuState;
 
 typedef enum {
@@ -25,6 +27,7 @@ typedef enum {
     LINKED_LIST,
     DOUBLY_LINKED_LIST,
     STACK,
+    CIRCULAR_BUFFER,
 
     // Sorting Menu Options
     BUBBLE_SORT = 1,
@@ -59,6 +62,10 @@ typedef enum {
     STACK_POP,
     STACK_PEEK,
     STACK_IS_EMPTY,
+
+    // Circular Buffer Menu Options
+    CIRCULAR_BUFFER_PUSH = 1,
+    CIRCULAR_BUFFER_POP,
 } MenuOption;
 
 typedef void (*MenuAction)(void);
@@ -144,6 +151,12 @@ static void ActionStackPush(void)
 static void ActionStackPop(void) { Stack_Pop(); }
 static void ActionStackPeek(void) { Stack_Peek(); }
 static void ActionStackIsEmpty(void) { Stack_IsEmpty(); }
+static void ActionCircularBuffer_Push(void) 
+{
+    int data = GetUserInputPrompt("Enter data (int) to push onto the circular buffer: ");
+    CircularBuffer_Push(data); 
+}
+static void ActionCircularBuffer_Pop(void) { CircularBuffer_Pop(); }
 
 static const MenuTransition stateTransitionTable[] = {
     //currentState,     menuOption,         nextState,        label,                action
@@ -154,6 +167,7 @@ static const MenuTransition stateTransitionTable[] = {
     { BASE_MENU,        LINKED_LIST,        LINKED_LIST_MENU, "Linked Lists",       NULL },
     { BASE_MENU,        DOUBLY_LINKED_LIST, DOUBLY_LINKED_LIST_MENU, "Doubly Linked Lists", NULL },
     { BASE_MENU,        STACK,              STACK_MENU,       "Stack",              NULL },
+    { BASE_MENU,        CIRCULAR_BUFFER,    CIRCULAR_BUFFER_MENU, "Circular Buffer", NULL },
 
     // Sorting Menu Transitions
     { SORTING_MENU,     BUBBLE_SORT,        SORTING_MENU,     "Bubble Sort",        ActionBubbleSort },
@@ -194,6 +208,11 @@ static const MenuTransition stateTransitionTable[] = {
     { STACK_MENU,        STACK_PEEK,         STACK_MENU,        "Peek",               ActionStackPeek },
     { STACK_MENU,        STACK_IS_EMPTY,     STACK_MENU,        "Is Empty?",          ActionStackIsEmpty },
     { STACK_MENU,        EXIT,               BASE_MENU,         "Back",               NULL },
+
+    // Circular Buffer Menu Transitions
+    { CIRCULAR_BUFFER_MENU, CIRCULAR_BUFFER_PUSH, CIRCULAR_BUFFER_MENU, "Push", ActionCircularBuffer_Push },
+    { CIRCULAR_BUFFER_MENU, CIRCULAR_BUFFER_POP,  CIRCULAR_BUFFER_MENU, "Pop",  ActionCircularBuffer_Pop },
+    { CIRCULAR_BUFFER_MENU, EXIT,                 BASE_MENU,            "Back", NULL },
 };
 
 /**
